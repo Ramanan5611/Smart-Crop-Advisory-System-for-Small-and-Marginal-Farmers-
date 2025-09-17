@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Uzhavan Nanban</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .spinner-sm {
+            border: 2px solid rgba(0,0,0,0.1);
+            border-top: 2px solid #16a34a; /* green-600 */
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-lime-50 sm:bg-gray-100">
+
+    <div class="min-h-screen flex flex-col justify-center items-center p-4">
+        <!-- App-like border container -->
+        <div class="w-full max-w-sm bg-lime-50 rounded-[2.5rem] p-1 sm:p-2 sm:border-8 sm:border-black sm:shadow-2xl overflow-hidden">
+        <div class="w-full h-full bg-lime-50 rounded-[2rem] overflow-y-auto">
+
+        <div class="w-full mx-auto px-4 py-8">
+            
+            <!-- Logo Header -->
+            <div class="text-center mb-6">
+                 <div class="inline-block bg-white p-4 rounded-full shadow-lg">
+                    <svg class="w-16 h-16 text-green-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM17 15C17 15 15.5 16.5 12 16.5C8.5 16.5 7 15 7 15C7 13.67 8.69 12.05 10 11V10C9.5 9.5 8.5 8.5 8.5 7.5C8.5 6.5 9.5 5.5 10.5 5.5C11.5 5.5 12.5 6.5 12.5 7.5C12.5 8.5 11.5 9.5 11 10V11C12.31 12.05 14 13.67 14 15H17Z" fill="currentColor"/>
+                        <path d="M14 15C14 13.67 12.31 12.05 11 11V10C11.5 9.5 12.5 8.5 12.5 7.5C12.5 6.5 11.5 5.5 10.5 5.5C9.5 5.5 8.5 6.5 8.5 7.5C8.5 8.5 9.5 9.5 10 10V11C8.69 12.05 7 13.67 7 15C7 15 8.5 16.5 12 16.5C15.5 16.5 17 15 17 15H14Z" fill="url(#paint0_linear_11_2)"/>
+                        <defs>
+                        <linearGradient id="paint0_linear_11_2" x1="12" y1="5.5" x2="12" y2="16.5" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#65a30d"/>
+                        <stop offset="1" stop-color="#16a34a"/>
+                        </linearGradient>
+                        </defs>
+                    </svg>
+                 </div>
+            </div>
+
+            <!-- Title -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-green-800">Uzhavan Nanban</h1>
+                <p class="text-gray-500 mt-2">Your Smart Farming Companion</p>
+            </div>
+
+            <!-- Login Form Card -->
+            <div class="bg-white p-8 rounded-2xl shadow-xl space-y-6">
+                <h2 class="text-2xl font-semibold text-center text-gray-800">Welcome Back!</h2>
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-600 mb-2">Phone Number</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 013.5 2h1.148a1.5 1.5 0 011.465 1.175l.716 3.223a1.5 1.5 0 01-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 006.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 011.767-1.052l3.223.716A1.5 1.5 0 0118 15.352V16.5a1.5 1.5 0 01-1.5 1.5h-1.5A13.5 13.5 0 012 3.5z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <input type="tel" id="phone" class="mt-1 block w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" placeholder="Enter your 10-digit mobile number">
+                    </div>
+                </div>
+                <div>
+                    <button onclick="login()" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-md font-medium text-white bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-700 hover:to-lime-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transform hover:scale-105 transition-transform">
+                        Send OTP & Login
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tip of the Day -->
+            <div id="tip-of-the-day" class="mt-8 p-4 bg-white/60 backdrop-blur-sm border border-green-200 rounded-lg">
+                <p id="tip-text" class="flex items-center text-sm text-green-900">
+                    <span class="spinner-sm mr-3"></span>
+                    <span>Loading a helpful tip for you...</span>
+                </p>
+            </div>
+
+             <!-- Terms -->
+             <div class="text-center mt-8">
+                 <p class="text-xs text-gray-500">By continuing, you agree to our <a href="#" class="font-medium text-green-600 hover:underline">Terms of Service</a>.</p>
+             </div>
+        </div>
+
+        </div>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================================
+        // Gemini API for Tip of the Day
+        // =====================================================================
+        async function callGeminiAPI(prompt) {
+            const apiKey = ""; // In a real environment, this would be secured.
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+            };
+            
+            console.log("Calling Gemini API...");
+
+            // Basic exponential backoff for retries
+            let response;
+            for (let i = 0; i < 3; i++) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) break;
+                } catch (error) {
+                    console.warn(`Attempt ${i + 1} failed. Retrying...`);
+                    if (i < 2) await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+                    else throw error; // Rethrow after last attempt
+                }
+            }
+
+            if (!response || !response.ok) {
+                console.error("API request failed after retries:", response);
+                throw new Error(`API request failed with status ${response?.status}`);
+            }
+
+            const result = await response.json();
+            const candidate = result.candidates?.[0];
+
+            if (candidate && candidate.content?.parts?.[0]?.text) {
+                return candidate.content.parts[0].text;
+            } else {
+                console.error("Unexpected API response structure:", result);
+                throw new Error("Could not parse tip from API response.");
+            }
+        }
+
+
+        async function fetchTipOfTheDay() {
+            const currentDate = new Date().toLocaleDateString('en-CA');
+            const prompt = `Provide a very short, practical, and encouraging farming tip of the day for an Indian farmer for ${currentDate}. Keep it under 25 words. Start the tip with an emoji.`;
+            
+            const tipTextElement = document.getElementById('tip-text');
+            
+            try {
+                const tip = await callGeminiAPI(prompt);
+                tipTextElement.innerHTML = tip;
+            } catch (error) {
+                console.error("Failed to fetch tip:", error);
+                tipTextElement.textContent = "💡 Check soil moisture before irrigating. Overwatering can be harmful.";
+            }
+        }
+
+        // =====================================================================
+        // Login Logic
+        // =====================================================================
+        function login() {
+            const phoneInput = document.getElementById('phone');
+            const phone = phoneInput.value;
+            
+            // Basic phone number validation
+            if(phone.length !== 10 || !/^\d{10}$/.test(phone)) {
+                 phoneInput.classList.add('border-red-500', 'ring-red-500');
+                 phoneInput.classList.remove('focus:ring-green-500');
+                 // Shake animation for invalid input
+                 phoneInput.parentElement.parentElement.classList.add('animate-shake');
+                 setTimeout(() => {
+                    phoneInput.parentElement.parentElement.classList.remove('animate-shake');
+                 }, 500);
+                 return;
+            }
+            
+            phoneInput.classList.remove('border-red-500', 'ring-red-500');
+            phoneInput.classList.add('focus:ring-green-500');
+            
+            // Redirect to the main app page. 
+            // In a real app, this is where you'd handle OTP verification.
+            const currentUrl = window.location.href;
+            const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+            
+            // **FIXED ERROR**: Changed redirection from dashboard.html to index.html
+            const nextUrl = `${baseUrl}index.html`; 
+            window.location.href = nextUrl;
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchTipOfTheDay);
+    </script>
+    
+    <style>
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        .animate-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+    </style>
+
+</body>
+</html>

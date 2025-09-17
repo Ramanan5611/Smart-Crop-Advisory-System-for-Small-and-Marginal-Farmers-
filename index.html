@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uzhavan Nanban - AgriTech App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior-y: none; /* Prevents pull-to-refresh */
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .bottom-nav-item.active svg,
+        .bottom-nav-item.active span {
+            color: #22c55e; /* green-500 */
+        }
+        /* Custom scrollbar for better look on desktop */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Styles for Gemini API responses within the new modal */
+        .gemini-response .response-section h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #166534; /* green-800 */
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        .gemini-response .response-section ul {
+            list-style-type: none;
+            padding-left: 1.75rem; /* Space for icon */
+        }
+         .gemini-response .response-section li {
+            position: relative;
+            margin-bottom: 0.5rem;
+            padding-left: 0.5rem;
+         }
+         .gemini-response .response-section li::before {
+            content: '✓';
+            position: absolute;
+            left: -1rem;
+            color: #22c55e;
+            font-weight: bold;
+         }
+        /* Loading spinner for buttons */
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4f46e5;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Modal animation */
+        .modal-enter {
+            animation: fadeIn 0.3s ease-out;
+        }
+        .modal-leave {
+            animation: fadeOut 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+        }
+        
+        /* Language Button styles */
+        .lang-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .lang-btn.active {
+            background-color: #22c55e; /* green-500 */
+            color: white;
+            border-color: #22c55e;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    
+    <div class="min-h-screen flex items-center justify-center p-0 sm:p-4">
+        <!-- App-like border container -->
+        <div class="relative w-full h-screen sm:h-[90vh] max-w-md mx-auto bg-white sm:rounded-[2.5rem] sm:border-8 sm:border-black sm:shadow-2xl overflow-hidden">
+            <!-- Main App Container -->
+            <div id="app-container" class="h-full">
+                <div id="page-main-app" class="page active flex flex-col h-full">
+                    <!-- Header Section -->
+                    <header id="app-header" class="bg-white p-4 border-b border-gray-200 sticky top-0 z-10">
+                        <h1 class="text-xl font-bold text-gray-800" data-translate-id="header_title">Crop Advisory</h1>
+                    </header>
+
+                    <!-- Content Area -->
+                    <main class="flex-grow overflow-y-auto pb-24">
+
+                        <!-- SUB-PAGE: ADVISORY -->
+                        <div id="subpage-advisory" class="page active p-4">
+                             <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6">
+                                <p class="font-bold" data-translate-id="welcome_message">Welcome, Ramesh!</p>
+                                <p class="text-sm" data-translate-id="welcome_subtitle">Get personalized advice for your farm.</p>
+                            </div>
+
+                            <form id="advisory-form" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Soil Type</label>
+                                    <select name="soil" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                        <option value="Alluvial Soil">Alluvial Soil / வண்டல் மண்</option>
+                                        <option value="Black Soil">Black Soil / கரிசல் மண்</option>
+                                        <option value="Red Soil">Red Soil / செம்மண்</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Season</label>
+                                    <select name="season" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                        <option value="Kharif">Kharif / காரீஃப்</option>
+                                        <option value="Rabi">Rabi / ராபி</option>
+                                    </select>
+                                </div>
+                                 <div>
+                                    <label class="block text-sm font-medium text-gray-700">Your Location</label>
+                                    <input name="location" type="text" value="Coimbatore, Tamil Nadu" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm">
+                                </div>
+                                <div>
+                                    <button id="advisory-btn" type="button" onclick="generateAdvisoryPlan(this)" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                                        ✨ Generate Smart Plan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- SUB-PAGE: PEST DETECTION -->
+                        <div id="subpage-pest" class="page p-4 text-center">
+                             <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-md mb-6 text-left">
+                                <p class="font-bold">Pest & Disease Detection</p>
+                                <p class="text-sm">Take a photo of the affected plant leaf.</p>
+                            </div>
+                            <div id="pest-scan-ui">
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-12 flex flex-col items-center justify-center h-64">
+                                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    <p class="mt-4 text-gray-500">Tap the button below to open your camera</p>
+                                </div>
+                                <button onclick="scanForPest()" class="mt-6 w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-md font-medium text-white bg-green-600 hover:bg-green-700">
+                                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    Scan Plant
+                                </button>
+                            </div>
+
+                            <div id="pest-scan-results" class="hidden text-left">
+                                 <div class="bg-white rounded-lg shadow-md p-4">
+                                    <p class="text-sm text-gray-500">Analysis Result:</p>
+                                    <h3 class="text-xl font-bold text-red-600">Aphids Detected</h3>
+                                    <p class="text-xs text-gray-400 mt-1">Confidence: 92%</p>
+                                     <img src="https://placehold.co/400x200/FEE2E2/B91C1C?text=Aphids+on+Leaf" class="rounded-md my-4 w-full object-cover">
+                                    <button id="pest-report-btn" onclick="generatePestReport(this)" class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                                        ✨ Get Detailed AI Report
+                                    </button>
+                                </div>
+                                <button onclick="resetPestScanner()" class="mt-4 text-sm text-gray-500 underline">Scan another plant</button>
+                            </div>
+                        </div>
+
+                        <!-- SUB-PAGE: MARKETPLACE -->
+                        <div id="subpage-market" class="page p-4">
+                            <!-- Search and Filter -->
+                            <div class="mb-4">
+                                <input type="text" placeholder="Search for crops (e.g., Rice)" class="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+
+                            <!-- Crop Listings -->
+                            <div class="space-y-4">
+                                <!-- Sample Listing 1 -->
+                                <div class="bg-white rounded-lg shadow-md overflow-hidden flex">
+                                    <img src="https://placehold.co/100x100/A3E635/4D7C0F?text=Rice" alt="Rice" class="w-24 h-24 object-cover">
+                                    <div class="p-4 flex-grow">
+                                        <h3 class="font-bold text-lg text-gray-800">Sona Masoori Rice</h3>
+                                        <p class="text-sm text-gray-500">10 Quintals Available</p>
+                                        <p class="text-green-600 font-semibold mt-2">₹1900 / Quintal</p>
+                                        <p class="text-xs text-gray-400 mt-1">Seller: Sunita, Pune</p>
+                                    </div>
+                                </div>
+                                <!-- Sample Listing 2 -->
+                                <div class="bg-white rounded-lg shadow-md overflow-hidden flex">
+                                    <img src="https://placehold.co/100x100/FBBF24/92400E?text=Wheat" alt="Wheat" class="w-24 h-24 object-cover">
+                                    <div class="p-4 flex-grow">
+                                        <h3 class="font-bold text-lg text-gray-800">Lokwan Wheat</h3>
+                                        <p class="text-sm text-gray-500">25 Quintals Available</p>
+                                        <p class="text-green-600 font-semibold mt-2">₹2100 / Quintal</p>
+                                        <p class="text-xs text-gray-400 mt-1">Seller: Ramesh, Tamil Nadu</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Floating Action Button -->
+                            <button onclick="showSellModal()" class="absolute bottom-24 right-4 bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 focus:outline-none">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                            </button>
+                        </div>
+                        
+                         <!-- SUB-PAGE: PROFILE (UPDATED) -->
+                        <div id="subpage-profile" class="page p-4">
+                            <div class="flex items-center space-x-4 mb-8">
+                                <img src="https://placehold.co/80x80/D1D5DB/374151?text=R" class="rounded-full" alt="Profile Picture">
+                                <div>
+                                    <h2 class="text-2xl font-bold">Ramesh</h2>
+                                    <p class="text-gray-500">+91-98XXXXXX00</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-6">
+                                <!-- General Settings -->
+                                <div>
+                                    <h3 class="text-sm font-semibold text-gray-500 uppercase mb-2">My Activity</h3>
+                                     <div class="bg-white rounded-lg shadow-sm">
+                                        <a href="#" class="flex items-center justify-between p-4 hover:bg-gray-50 border-b">
+                                            <span class="font-medium">My Listings</span>
+                                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </a>
+                                        <a href="#" class="flex items-center justify-between p-4 hover:bg-gray-50">
+                                            <span class="font-medium">Saved Advice</span>
+                                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </a>
+                                    </div>
+                                </div>
+                               
+                                <!-- Language Settings -->
+                                <div>
+                                    <h3 class="text-sm font-semibold text-gray-500 uppercase mb-2" data-translate-id="language_settings_title">Language Settings</h3>
+                                    <div class="bg-white rounded-lg shadow-sm p-4">
+                                       <p class="text-sm text-gray-600 mb-4" data-translate-id="language_settings_subtitle">Choose your preferred language.</p>
+                                       <div id="language-selector" class="grid grid-cols-2 gap-3 text-center">
+                                            <button onclick="setLanguage('en')" class="lang-btn border rounded-lg py-2" data-lang="en">English</button>
+                                            <button onclick="setLanguage('ta')" class="lang-btn border rounded-lg py-2" data-lang="ta">தமிழ்</button>
+                                            <button onclick="setLanguage('hi')" class="lang-btn border rounded-lg py-2" data-lang="hi">हिंदी</button>
+                                            <button onclick="setLanguage('pa')" class="lang-btn border rounded-lg py-2" data-lang="pa">ਪੰਜਾਬੀ</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                 <!-- Other Options -->
+                                <div>
+                                     <h3 class="text-sm font-semibold text-gray-500 uppercase mb-2">More</h3>
+                                     <div class="bg-white rounded-lg shadow-sm">
+                                        <a href="#" class="flex items-center justify-between p-4 hover:bg-gray-50 border-b">
+                                            <span class="font-medium">Help & Support</span>
+                                           <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </a>
+                                        <a href="#" onclick="logout()" class="flex items-center justify-between p-4 hover:bg-gray-50 text-red-600">
+                                            <span class="font-medium">Logout</span>
+                                        </a>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </main>
+                    
+                    <!-- Bottom Navigation Bar -->
+                     <nav class="absolute bottom-0 w-full bg-white border-t border-gray-200 flex justify-around h-16">
+                        <button onclick="navigate('advisory', this)" class="bottom-nav-item active flex flex-col items-center justify-center w-full text-gray-500 hover:bg-gray-50">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span class="text-xs" data-translate-id="nav_advisory">Advisory</span>
+                        </button>
+                        <button onclick="navigate('pest', this)" class="bottom-nav-item flex flex-col items-center justify-center w-full text-gray-500 hover:bg-gray-50">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            <span class="text-xs" data-translate-id="nav_detect">Detect</span>
+                        </button>
+                        <button onclick="navigate('market', this)" class="bottom-nav-item flex flex-col items-center justify-center w-full text-gray-500 hover:bg-gray-50">
+                           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            <span class="text-xs" data-translate-id="nav_market">Market</span>
+                        </button>
+                        <button onclick="navigate('profile', this)" class="bottom-nav-item flex flex-col items-center justify-center w-full text-gray-500 hover:bg-gray-50">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            <span class="text-xs" data-translate-id="nav_profile">Profile</span>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for Selling Crops -->
+    <div id="sell-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-30">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">List Your Crop</h2>
+                <button onclick="hideSellModal()" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+            </div>
+            <form id="sell-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Crop Name</label>
+                    <input name="cropName" type="text" value="Sona Masoori Rice" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm">
+                </div>
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700">Quantity (in Quintals)</label>
+                    <input name="quantity" type="number" value="10" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="description" rows="3" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm" placeholder="e.g., Freshly harvested, high quality..."></textarea>
+                    <button type="button" id="description-btn" onclick="generateMarketDescription(this)" class="mt-2 text-xs text-green-600 font-semibold hover:underline">✨ Auto-generate Description</button>
+                </div>
+                <div class="flex justify-end space-x-2 pt-4">
+                    <button type="button" onclick="hideSellModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
+                    <button type="button" onclick="hideSellModal()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Submit Listing</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for AI Results -->
+    <div id="results-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden z-30">
+        <div id="results-modal-content" class="bg-gray-50 rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col modal-enter">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h2 id="results-modal-title" class="text-xl font-bold">AI Result</h2>
+                <button onclick="hideResultsModal()" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+            </div>
+            <div id="results-modal-body" class="p-6 overflow-y-auto text-sm text-gray-700 leading-relaxed">
+                <!-- Gemini content will be injected here -->
+            </div>
+            <div class="p-4 bg-white border-t flex justify-end">
+                 <button onclick="hideResultsModal()" class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================================
+        // Translations
+        // =====================================================================
+        const translations = {
+            en: {
+                header_title: "Crop Advisory",
+                welcome_message: "Welcome, Ramesh!",
+                welcome_subtitle: "Get personalized advice for your farm.",
+                nav_advisory: "Advisory",
+                nav_detect: "Detect",
+                nav_market: "Market",
+                nav_profile: "Profile",
+                language_settings_title: "Language Settings",
+                language_settings_subtitle: "Choose your preferred language."
+            },
+            ta: {
+                header_title: "பயிர் ஆலோசனை",
+                welcome_message: "வாருங்கள், ரமேஷ்!",
+                welcome_subtitle: "உங்கள் பண்ணைக்கு தனிப்பயனாக்கப்பட்ட ஆலோசனைகளைப் பெறுங்கள்.",
+                nav_advisory: "ஆலோசனை",
+                nav_detect: "கண்டறி",
+                nav_market: "சந்தை",
+                nav_profile: "சுயவிவரம்",
+                language_settings_title: "மொழி அமைப்புகள்",
+                language_settings_subtitle: "நீங்கள் விரும்பும் மொழியைத் தேர்ந்தெடுக்கவும்."
+            },
+            hi: {
+                header_title: "फ़सल सलाह",
+                welcome_message: "स्वागत है, रमेश!",
+                welcome_subtitle: "अपने खेत के लिए व्यक्तिगत सलाह प्राप्त करें।",
+                nav_advisory: "सलाह",
+                nav_detect: "पहचानें",
+                nav_market: "बाज़ार",
+                nav_profile: "प्रोफ़ाइल",
+                language_settings_title: "भाषा सैटिंग्स",
+                language_settings_subtitle: "अपनी पसंदीदा भाषा चुनें।"
+            },
+            pa: {
+                header_title: "ਫਸਲ ਸਲਾਹ",
+                welcome_message: "ਜੀ ਆਇਆਂ ਨੂੰ, ਰਮੇਸ਼!",
+                welcome_subtitle: "ਆਪਣੇ ਖੇਤ ਲਈ ਵਿਅਕਤੀਗਤ ਸਲਾਹ ਪ੍ਰਾਪਤ ਕਰੋ।",
+                nav_advisory: "ਸਲਾਹ",
+                nav_detect: "ਪਤਾ ਲਗਾਓ",
+                nav_market: "ਮਾਰਕੀਟ",
+                nav_profile: "ਪ੍ਰੋਫਾਈਲ",
+                language_settings_title: "ਭਾਸ਼ਾ ਸੈਟਿੰਗਜ਼",
+                language_settings_subtitle: "ਆਪਣੀ ਪਸੰਦੀਦਾ ਭਾਸ਼ਾ ਚੁਣੋ।"
+            }
+        };
+
+        function setLanguage(lang) {
+            if (!translations[lang]) return;
+            localStorage.setItem('userLanguage', lang);
+            
+            document.querySelectorAll('[data-translate-id]').forEach(element => {
+                const key = element.getAttribute('data-translate-id');
+                if (translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+
+            document.querySelectorAll('#language-selector .lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+            // Also update the main header title when navigating away from profile
+             const currentActivePage = document.querySelector('#page-main-app main .page.active').id.replace('subpage-', '');
+             showSubPage(currentActivePage);
+        }
+
+        function loadLanguage() {
+            const savedLang = localStorage.getItem('userLanguage') || 'en';
+            setLanguage(savedLang); 
+        }
+
+        // =====================================================================
+        // Gemini API Simulation
+        // =====================================================================
+        const apiKey = ""; // In a real app, this would be your API key.
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        async function callGeminiAPI(prompt) {
+             // This is a simplified simulation.
+            console.log("Calling Gemini API with prompt:", prompt);
+            await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+
+            if (prompt.includes("crop plan")) {
+                return `<div class="gemini-response">
+                            <div class="response-section bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                                <h4><span class="mr-2">🌾</span>Recommended Crop: Paddy (Rice)</h4>
+                                <ul>
+                                    <li><strong>Why:</strong> Ideal for the Kharif season in Coimbatore's alluvial soil.</li>
+                                    <li><strong>Variety:</strong> CO-51 or ADT-45 are high-yield varieties suitable for this region.</li>
+                                </ul>
+                            </div>
+                        </div>`;
+            } else if (prompt.includes("Aphids")) {
+                 return `<div class="gemini-response">
+                            <div class="response-section bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                                <h4><span class="mr-2">🐛</span>About Aphids</h4>
+                                <p class="mb-2">Aphids are small, sap-sucking insects that can cause significant damage.</p>
+                            </div>
+                        </div>`;
+            } else if (prompt.includes("market description")) {
+                return "High-quality Sona Masoori rice, freshly harvested from our farm in Pune. This aromatic and delicious rice is perfect for daily meals.";
+            }
+            return "No specific response found for this prompt.";
+        }
+
+
+        // =====================================================================
+        // UI and Navigation Logic
+        // =====================================================================
+        function showSubPage(subPageId) {
+            document.querySelectorAll('#page-main-app main .page').forEach(page => page.classList.remove('active'));
+            document.getElementById(`subpage-${subPageId}`).classList.add('active');
+            
+            const titles = {
+                en: { 'advisory': 'Crop Advisory', 'pest': 'Pest Detection', 'market': 'Marketplace', 'profile': 'My Profile' },
+                ta: { 'advisory': 'பயிர் ஆலோசனை', 'pest': 'பூச்சி கண்டறிதல்', 'market': 'சந்தை', 'profile': 'சுயவிவரம்' },
+                hi: { 'advisory': 'फ़सल सलाह', 'pest': 'कीट पहचान', 'market': 'बाज़ार', 'profile': 'प्रोफ़ाइल' },
+                pa: { 'advisory': 'ਫਸਲ ਸਲਾਹ', 'pest': 'ਕੀੜੇ ਦੀ ਪਛਾਣ', 'market': 'ਮਾਰਕੀਟ', 'profile': 'ਪ੍ਰੋਫਾਈਲ' },
+            };
+            const currentLang = localStorage.getItem('userLanguage') || 'en';
+            
+            document.getElementById('app-header').querySelector('h1').textContent = titles[currentLang][subPageId] || titles['en'][subPageId];
+        }
+        
+        function navigate(subPageId, element) {
+            showSubPage(subPageId);
+            document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        function logout() {
+            // Also clear language preference on logout
+            localStorage.removeItem('userLanguage');
+            window.location.href = 'login.html';
+        }
+        
+        function showSellModal() { document.getElementById('sell-modal').classList.remove('hidden'); }
+        function hideSellModal() { document.getElementById('sell-modal').classList.add('hidden'); }
+        
+        function showResultsModal(title, content) {
+            document.getElementById('results-modal-title').textContent = title;
+            document.getElementById('results-modal-body').innerHTML = content;
+            const modal = document.getElementById('results-modal');
+            modal.classList.remove('hidden');
+            modal.querySelector('#results-modal-content').classList.remove('modal-leave');
+            modal.querySelector('#results-modal-content').classList.add('modal-enter');
+        }
+
+        function hideResultsModal() {
+            const modal = document.getElementById('results-modal');
+            const content = modal.querySelector('#results-modal-content');
+            content.classList.remove('modal-enter');
+            content.classList.add('modal-leave');
+            setTimeout(() => {
+                 modal.classList.add('hidden');
+            }, 300); // Match animation duration
+        }
+
+        // =====================================================================
+        // Interactive Feature Logic
+        // =====================================================================
+        function setLoadingState(button, isLoading) {
+            const originalText = button.dataset.originalText || button.innerHTML;
+            if (isLoading) {
+                button.dataset.originalText = originalText;
+                button.innerHTML = '<div class="spinner mx-auto"></div>';
+                button.disabled = true;
+            } else {
+                button.innerHTML = button.dataset.originalText;
+                button.disabled = false;
+            }
+        }
+
+        async function generateAdvisoryPlan(button) {
+            const form = document.getElementById('advisory-form');
+            const soil = form.elements.soil.value;
+            const season = form.elements.season.value;
+            const location = form.elements.location.value;
+            
+            const prompt = `Create a detailed crop plan for a farmer in ${location} with ${soil} during the ${season} season.`;
+            
+            setLoadingState(button, true);
+            showResultsModal('Generating Plan...', '<div class="flex justify-center p-8"><div class="spinner" style="width:32px; height:32px; border-width:4px;"></div></div>');
+
+            const response = await callGeminiAPI(prompt);
+            showResultsModal('Your Personalized Crop Plan', response);
+            setLoadingState(button, false);
+        }
+
+        function scanForPest() {
+            document.getElementById('pest-scan-ui').classList.add('hidden');
+            document.getElementById('pest-scan-results').classList.remove('hidden');
+        }
+
+        function resetPestScanner() {
+            document.getElementById('pest-scan-results').classList.add('hidden');
+            document.getElementById('pest-scan-ui').classList.remove('hidden');
+        }
+
+        async function generatePestReport(button) {
+            const prompt = "Provide a detailed report on Aphids, including organic and chemical control methods.";
+            
+            setLoadingState(button, true);
+            showResultsModal('Generating Pest Report...', '<div class="flex justify-center p-8"><div class="spinner" style="width:32px; height:32px; border-width:4px;"></div></div>');
+            
+            const response = await callGeminiAPI(prompt);
+            showResultsModal('Detailed AI Pest Report', response);
+            setLoadingState(button, false);
+        }
+
+        async function generateMarketDescription(button) {
+            const form = document.getElementById('sell-form');
+            const cropName = form.elements.cropName.value;
+            const quantity = form.elements.quantity.value;
+            const descriptionTextarea = form.elements.description;
+
+            const prompt = `Write a brief, appealing market description for ${quantity} quintals of ${cropName}.`;
+            
+            setLoadingState(button, true);
+            descriptionTextarea.value = "Generating description...";
+            
+            const response = await callGeminiAPI(prompt);
+            descriptionTextarea.value = response;
+            setLoadingState(button, false);
+        }
+
+        // Load language preference when the app starts
+        document.addEventListener('DOMContentLoaded', loadLanguage);
+
+    </script>
+
+</body>
+</html>
+
